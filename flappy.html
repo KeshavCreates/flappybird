@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Flappy Bird Game</title>
+    <style>
+      /* Load the flappybird font from Google Fonts */
+      @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+        font-family: "Press Start 2P", cursive;
+        background: #70c5ce;
+      }
+
+      #Canvas {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, #4ec0ca 0%, #b9e8e0 100%);
+        overflow: hidden;
+      }
+
+      /* Ground element */
+      #Ground {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 15%;
+        background-size: 20% 100%;
+        background-color: #8f541a;
+        z-index: 100;
+        animation: GroundMovement 15s linear infinite;
+      }
+
+      @keyframes GroundMovement {
+        from {
+          background-position-x: 0%;
+        }
+        to {
+          background-position-x: -100%;
+        }
+      }
+
+      #Birdy {
+        width: 2.9%;
+        padding-bottom: 2%;
+        background-image: url("../assets/bird.png");
+        background-size: 300%;
+        position: absolute;
+        top: 50%;
+        left: 20%;
+        z-index: 150;
+        transition: transform 0.1s;
+      }
+
+      .FallenBirdy {
+        transform: rotate(90deg);
+      }
+
+      #PauseButton {
+        position: absolute;
+        top: 2%;
+        right: 1%;
+        width: 40px;
+        height: 40px;
+        background: #f8c548;
+        border-radius: 50%;
+        box-shadow: 0px 4px 0px #e59400;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 150;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      #PauseButton:hover {
+        transform: translateY(2px);
+        box-shadow: 0px 2px 0px #e59400;
+      }
+
+      #PauseButton span {
+        font-size: 18px;
+        color: #fff;
+      }
+
+      .Pipe {
+        position: absolute;
+        top: 0;
+        left: 100%;
+        width: 5%;
+        border-radius: 2px;
+        border: 2px solid #533a71;
+        background: linear-gradient(to right, #75b79e 0%, #65a882 100%);
+        animation: PipeMovement 15s linear;
+      }
+
+      .PipeHead {
+        position: absolute;
+        width: 120%;
+        height: 26px;
+        left: -10%;
+        background: #533a71;
+        border-radius: 5px;
+      }
+
+      .TopPipe .PipeHead {
+        bottom: -13px;
+      }
+
+      .BottomPipe .PipeHead {
+        top: -13px;
+      }
+
+      @keyframes PipeMovement {
+        from {
+          left: 100%;
+        }
+        to {
+          left: -25%;
+        }
+      }
+
+      .paused {
+        animation-play-state: paused;
+      }
+      .noSelect {
+        user-select: none;
+      }
+
+      #GameOverlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 160;
+        display: none;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #LostScoreScreen {
+        position: relative;
+        padding: 20px;
+        background: #ded895;
+        border-radius: 10px;
+        border: 4px solid #5c3d00;
+        text-align: center;
+        display: none;
+        font-family: "Press Start 2P", cursive;
+        font-size: 16px;
+        color: #4a4336;
+        box-shadow: 0 8px 0 #aa8e39;
+      }
+
+      #CurrentScoreCard {
+        position: absolute;
+        top: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        font-family: "Press Start 2P", cursive;
+        font-size: 48px;
+        color: white;
+        text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000,
+          2px 2px 0 #000;
+        z-index: 110;
+      }
+
+      #InstructionBox {
+        position: absolute;
+        left: 50%;
+        top: 35%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 10px;
+        border: 2px solid #fff;
+        padding: 15px 25px;
+        text-align: center;
+        z-index: 150;
+        display: none;
+      }
+
+      #InstructionBox div {
+        font-family: "Press Start 2P", cursive;
+        color: white;
+        font-size: 16px;
+        line-height: 2;
+      }
+
+      #ResetButton {
+        background: #f8c548;
+        border: none;
+        padding: 10px 20px;
+        margin-top: 15px;
+        font-family: "Press Start 2P", cursive;
+        font-size: 14px;
+        color: #5c3d00;
+        border-radius: 5px;
+        box-shadow: 0 4px 0 #e59400;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      #ResetButton:hover {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 #e59400;
+      }
+
+      /* Clouds */
+      .Cloud {
+        position: absolute;
+        background: white;
+        border-radius: 50%;
+        animation: CloudMovement linear infinite;
+        opacity: 0.8;
+      }
+
+      @keyframes CloudMovement {
+        from {
+          left: 110%;
+        }
+        to {
+          left: -20%;
+        }
+      }
+
+      /* Medal display for score achievements */
+      .medal {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin: 10px auto;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      .bronze {
+        background: linear-gradient(45deg, #a77044 0%, #cd9c6a 100%);
+      }
+
+      .silver {
+        background: linear-gradient(45deg, #b4b4b4 0%, #e0e0e0 100%);
+      }
+
+      .gold {
+        background: linear-gradient(45deg, #ffd700 0%, #ffec8b 100%);
+      }
+
+      .platinum {
+        background: linear-gradient(45deg, #89f7fe 0%, #66a6ff 100%);
+      }
+
+      /* Day/Night cycle */
+      #DayNightToggle {
+        position: absolute;
+        top: 2%;
+        left: 1%;
+        width: 40px;
+        height: 40px;
+        background: #f8c548;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 150;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0px 4px 0px #e59400;
+      }
+
+      #DayNightToggle:hover {
+        transform: translateY(2px);
+        box-shadow: 0px 2px 0px #e59400;
+      }
+
+      .night #Canvas {
+        background: linear-gradient(to bottom, #0c1445 0%, #263168 100%);
+      }
+
+      .night .Cloud {
+        opacity: 0.3;
+      }
+      .night #Ground {
+        filter: brightness(0.6);
+      }
+
+      /* Flash effect when hitting something */
+      @keyframes flashEffect {
+        0% {
+          background: rgba(255, 255, 255, 0);
+        }
+        50% {
+          background: rgba(255, 0, 0, 0.3);
+        }
+        100% {
+          background: rgba(255, 255, 255, 0);
+        }
+      }
+
+      .flash {
+        animation: flashEffect 0.3s;
+      }
+
+      /* Mobile Responsiveness Enhancements */
+      @media screen and (max-width: 768px) {
+        /* Increase bird size for mobile */
+        #Birdy {
+          width: 7% !important;
+          padding-bottom: 5% !important;
+        }
+
+        /* Increase pipe width on mobile */
+        .Pipe {
+          width: 10% !important;
+        }
+
+        .PipeHead {
+          height: 22px !important;
+        }
+
+        /* UI elements */
+        #CurrentScoreCard {
+          font-size: 36px !important;
+        }
+        #PauseButton,
+        #DayNightToggle {
+          width: 48px !important;
+          height: 48px !important;
+        }
+        #PauseButton i,
+        #DayNightToggle i {
+          font-size: 20px !important;
+        }
+
+        /* Instruction box */
+        #InstructionBox {
+          width: 80% !important;
+          max-width: 300px !important;
+          padding: 12px !important;
+        }
+        #InstructionBox div {
+          font-size: 14px !important;
+          line-height: 1.8 !important;
+        }
+
+        /* Game over screen */
+        #LostScoreScreen {
+          width: 80% !important;
+          max-width: 300px !important;
+          padding: 15px !important;
+        }
+        #ResetButton {
+          padding: 12px 20px !important;
+          margin-top: 12px !important;
+          min-width: 160px !important;
+          min-height: 44px !important;
+        }
+      }
+
+      /* Portrait-specific optimizations */
+      @media screen and (max-width: 768px) and (orientation: portrait) {
+        #Birdy {
+          left: 25% !important;
+        }
+        #Ground {
+          height: 20% !important;
+        }
+        #CurrentScoreCard {
+          top: 6% !important;
+        }
+        .Pipe {
+          animation-duration: 13s !important;
+        }
+        /* Increase base gap for pipes */
+        .TopPipe,
+        .BottomPipe {
+          --mobile-gap-adjustment: 5%;
+        }
+      }
+
+      /* Landscape-specific optimizations */
+      @media screen and (max-width: 768px) and (orientation: landscape) {
+        #Birdy {
+          left: 20% !important;
+          width: 6% !important;
+          padding-bottom: 4% !important;
+        }
+        #Ground {
+          height: 20% !important;
+        }
+        #CurrentScoreCard {
+          top: 8% !important;
+          font-size: 32px !important;
+        }
+        #PauseButton {
+          top: 5% !important;
+          right: 2% !important;
+        }
+        #DayNightToggle {
+          top: 5% !important;
+          left: 2% !important;
+        }
+      }
+
+      /* Small phone optimizations */
+      @media screen and (max-width: 375px) {
+        #Birdy {
+          width: 7.5% !important;
+          padding-bottom: 5.5% !important;
+        }
+        #CurrentScoreCard {
+          font-size: 32px !important;
+        }
+        .Pipe {
+          width: 10% !important;
+          animation-duration: 14s !important;
+        }
+      }
+
+      /* Touch optimizations */
+      @media (hover: none) and (pointer: coarse) {
+        #PauseButton,
+        #DayNightToggle,
+        #ResetButton {
+          min-height: 44px !important;
+          min-width: 44px !important;
+        }
+        body {
+          touch-action: none !important;
+          -webkit-overflow-scrolling: none !important;
+          overscroll-behavior: none !important;
+        }
+        #Canvas,
+        #CurrentScoreCard,
+        #PauseButton,
+        #DayNightToggle,
+        #InstructionBox,
+        #LostScoreScreen {
+          user-select: none !important;
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+        }
+      }
+
+      /* Performance optimizations */
+      @media screen and (max-width: 768px) {
+        .Pipe,
+        #Ground,
+        .Cloud,
+        #Birdy {
+          will-change: transform !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          transform: translateZ(0) !important;
+        }
+        @media (max-resolution: 1dppx) {
+          .Cloud:nth-child(n + 4) {
+            display: none !important;
+          }
+        }
+      }
+      #Canvas {
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div id="Canvas">
+      <!-- Instruction Box -->
+      <div id="InstructionBox" class="noSelect">
+        <div>
+          Click to Fly <br />
+          Space Bar to Reset <br />
+          "P" to Pause
+        </div>
+      </div>
+      <!-- Current Score -->
+      <div id="CurrentScoreCard" class="noSelect">
+        <span id="CurrentScore">0</span>
+      </div>
+      <!-- Game Overlay for pause/game over -->
+      <div id="GameOverlay">
+        <div id="LostScoreScreen" class="noSelect">
+          <div id="GameOverText">Game Over</div>
+          <div id="MedalContainer"></div>
+          <div>Score</div>
+          <div id="FinalScore" style="font-size: 24px; margin: 5px 0">0</div>
+          <div>Best</div>
+          <div id="BestScore" style="font-size: 24px; margin: 5px 0">0</div>
+          <button id="ResetButton">
+            <i class="fas fa-redo-alt"></i> Play Again
+          </button>
+        </div>
+      </div>
+      <!-- Bird -->
+      <div id="Birdy" style="background-position-x: 400%"></div>
+      <!-- Ground -->
+      <div id="Ground"></div>
+      <!-- Day/Night Toggle -->
+      <div id="DayNightToggle" class="noSelect">
+        <i class="fas fa-moon"></i>
+      </div>
+      <!-- Pause Button -->
+      <div id="PauseButton" class="noSelect">
+        <i class="fas fa-pause"></i>
+      </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+      $(function () {
+        // Preload audio files
+        var sounds = {
+          jump: new Audio(
+            "https://cdnjs.cloudflare.com/ajax/libs/ion-sound/3.0.7/sounds/branch_break.mp3"
+          ),
+          point: new Audio(
+            "https://cdnjs.cloudflare.com/ajax/libs/ion-sound/3.0.7/sounds/water_droplet_3.mp3"
+          ),
+          hit: new Audio(
+            "https://cdnjs.cloudflare.com/ajax/libs/ion-sound/3.0.7/sounds/metal_plate.mp3"
+          ),
+        };
+
+        // Set proper volumes
+        sounds.jump.volume = 0.5;
+        sounds.point.volume = 0.7;
+        sounds.hit.volume = 0.7;
+
+        $("#InstructionBox").fadeIn();
+        setTimeout(function () {
+          $("#InstructionBox").fadeOut();
+        }, 5000);
+
+        var canvasObject = $("#Canvas");
+        var gameOverlay = $("#GameOverlay");
+        createClouds();
+        var gameLoopIntervalID = 0,
+          Paused = true,
+          Lost = false,
+          isNight = false;
+
+        function pauseGame() {
+          clearInterval(gameLoopIntervalID);
+          $(".Pipe, .Cloud, #Ground").addClass("paused");
+          $("#PauseButton i").removeClass("fa-pause").addClass("fa-play");
+          Paused = true;
+          if (!Lost) {
+            gameOverlay.fadeIn();
+            $("#LostScoreScreen").hide();
+          }
+        }
+
+        function startGame() {
+          if (Lost) return;
+          gameLoopIntervalID = setInterval(gameLoop, 30);
+          $(".Pipe, .Cloud, #Ground").removeClass("paused");
+          $("#PauseButton i").removeClass("fa-play").addClass("fa-pause");
+          Paused = false;
+          gameOverlay.fadeOut();
+        }
+
+        function endGame() {
+          Lost = true;
+          pauseGame();
+          canvasObject.addClass("flash");
+          setTimeout(function () {
+            canvasObject.removeClass("flash");
+          }, 300);
+          var cookieScore = getCookie("HighScore") || 0;
+          var highScore = Math.max(CurrentScore, cookieScore);
+          setCookie("HighScore", highScore, 30000);
+          Birdy.BirdyObject.addClass("FallenBirdy").animate(
+            {
+              top:
+                canvasObject.height() * 0.85 -
+                Birdy.BirdyObject.height() +
+                "px",
+            },
+            1500,
+            "easeInQuad"
+          );
+          $("#FinalScore").html(CurrentScore);
+          $("#BestScore").html(highScore);
+          var medalEl = $("#MedalContainer");
+          medalEl.empty();
+          if (CurrentScore >= 50) {
+            medalEl.html(
+              '<div class="medal platinum"></div><div>Platinum!</div>'
+            );
+          } else if (CurrentScore >= 30) {
+            medalEl.html('<div class="medal gold"></div><div>Gold!</div>');
+          } else if (CurrentScore >= 20) {
+            medalEl.html('<div class="medal silver"></div><div>Silver!</div>');
+          } else if (CurrentScore >= 10) {
+            medalEl.html('<div class="medal bronze"></div><div>Bronze!</div>');
+          }
+          gameOverlay.fadeIn();
+          $("#LostScoreScreen").fadeIn();
+        }
+
+        function resetGame() {
+          pauseGame();
+          $(".Pipe, .Cloud").remove();
+          createClouds();
+          Lost = false;
+          gameLoopCounter = 0;
+          CurrentScore = 0;
+          $("#CurrentScore").html("0");
+          Birdy.Reset();
+          startGame();
+          $("#LostScoreScreen").fadeOut();
+          gameOverlay.fadeOut();
+        }
+
+        function togglePause() {
+          Paused ? startGame() : pauseGame();
+        }
+        function toggleDayNight() {
+          if (isNight) {
+            $("body").removeClass("night");
+            $("#DayNightToggle i").removeClass("fa-sun").addClass("fa-moon");
+          } else {
+            $("body").addClass("night");
+            $("#DayNightToggle i").removeClass("fa-moon").addClass("fa-sun");
+          }
+          isNight = !isNight;
+        }
+
+        var CurrentScore = 0;
+        $("#PauseButton").mousedown(function (event) {
+          event.stopPropagation();
+          togglePause();
+        });
+        $("#DayNightToggle").mousedown(function (event) {
+          event.stopPropagation();
+          toggleDayNight();
+        });
+        $("#ResetButton").click(resetGame);
+        canvasObject.mousedown(function () {
+          if (Paused && !Lost) startGame();
+          Birdy.jump();
+        });
+        $("body").keydown(function (event) {
+          if (event.which == 32) resetGame();
+          if (event.which == 80) togglePause();
+        });
+
+        function createClouds() {
+          for (var i = 0; i < 5; i++) {
+            var size = Math.random() * 8 + 3;
+            var speed = Math.random() * 120 + 60;
+            var top = Math.random() * 30 + 5;
+            var cloud = $("<div/>")
+              .addClass("Cloud")
+              .css({
+                width: size + "%",
+                height: size / 2 + "%",
+                top: top + "%",
+                left: Math.random() * 100 + "%",
+                animationDuration: speed + "s",
+              })
+              .appendTo(canvasObject);
+            for (var j = 0; j < 4; j++) {
+              $("<div/>")
+                .css({
+                  position: "absolute",
+                  width: Math.random() * 40 + 60 + "%",
+                  height: Math.random() * 40 + 60 + "%",
+                  background: "white",
+                  borderRadius: "50%",
+                  top: Math.random() * 60 + "%",
+                  left: Math.random() * 60 + "%",
+                  zIndex: -1,
+                })
+                .appendTo(cloud);
+            }
+          }
+        }
+
+        var gameLoopCounter = 0;
+        function gameLoop() {
+          if (gameLoopCounter % 2 === 0) {
+            incrementScore();
+            checkCollisions();
+          }
+          isInBound(Birdy.BirdyObject, canvasObject);
+          Birdy.fall();
+          var pipeFrequency = 100;
+          if (gameLoopCounter % pipeFrequency === 0) {
+            addPipe();
+            cleanPipes();
+          }
+          if (gameLoopCounter % 7 === 0) {
+            Birdy.flapWings();
+          }
+          gameLoopCounter++;
+        }
+
+        // Improved Birdy object with better mobile physics
+        var Birdy = new (function () {
+          var selectorObject = $("#Birdy"),
+            jumping = false,
+            gravVeloc = 0,
+            // Adjusted physics constants for better feel
+            gravAccel = 0.25, // Reduced from 0.3 for smoother falling
+            terminalVelocity = 4.5, // Reduced from 5 for more control
+            Angle = 0,
+            WingPosition = 0,
+            WingPositions = [0, 1, 2, 1];
+
+          this.Reset = function () {
+            jumping = false;
+            gravVeloc = 0;
+            Angle = 0;
+            WingPosition = 0;
+            selectorObject
+              .removeClass("FallenBirdy")
+              .stop(true, true)
+              .css({ transform: "rotate(0deg)", top: "50%" });
+          };
+
+          this.fall = function () {
+            if (!jumping) {
+              selectorObject
+                .stop()
+                .animate({ top: "+=" + gravVeloc + "%" }, 30, "linear");
+              gravVeloc += gravAccel;
+              if (gravVeloc > terminalVelocity) {
+                gravVeloc = terminalVelocity;
+              }
+              var AdjustedAngle =
+                (Angle + 15 * (gravVeloc / terminalVelocity)) ^ 2;
+              adjustAngle(Math.min(AdjustedAngle, 90));
+            } else {
+              gravVeloc = 0;
+            }
+          };
+
+          // Improved jump function with better mobile physics
+          this.jump = function () {
+            if (Paused || Lost) return;
+
+            // Play jump sound
+            playSound("jump");
+
+            jumping = true;
+            adjustAngle(-45);
+
+            // Detect if we're on mobile
+            var isMobile = $(window).width() < 768;
+            var isPortrait = $(window).height() > $(window).width();
+
+            // Define jump height and duration based on device
+            var jumpHeight, jumpDuration;
+
+            if (isMobile) {
+              if (isPortrait) {
+                jumpHeight = "9%"; // Higher jump for portrait
+                jumpDuration = 170; // Longer duration for more floaty feel
+              } else {
+                jumpHeight = "12%"; // Standard mobile jump
+                jumpDuration = 160; // Slightly longer for mobile landscape
+              }
+
+              // Reduce gravity velocity after jump to give more "float" time
+              gravVeloc = -0.5;
+            } else {
+              // Desktop values
+              jumpHeight = "9%";
+              jumpDuration = 120;
+            }
+
+            selectorObject
+              .stop()
+              .animate(
+                { top: "-=" + jumpHeight },
+                jumpDuration,
+                "easeOutQuad",
+                function () {
+                  jumping = false;
+                  Birdy.fall();
+                }
+              );
+          };
+
+          this.flapWings = function () {
+            WingPosition++;
+            if (Angle > 45) {
+              WingPosition = 1;
+            }
+            selectorObject.css(
+              "background-position-x",
+              WingPositions[WingPosition % 4] * 50 + "%"
+            );
+          };
+
+          function adjustAngle(angle) {
+            selectorObject.css("transform", "rotate(" + angle + "deg)");
+            Angle = angle;
+          }
+
+          this.BirdyObject = selectorObject;
+        })();
+
+        function addPipe() {
+          // Adjusted pipe gap calculation for better mobile experience
+          var isMobile = $(window).width() < 768;
+          var isPortrait = $(window).height() > $(window).width();
+
+          // Base gap increases with mobile devices
+          var PipeGap = 32 - Math.min(Math.floor(CurrentScore / 20) * 2, 10);
+
+          // Extra adjustments for mobile
+          if (isMobile) {
+            if (isPortrait) {
+              PipeGap += 15; // Significantly wider gap in portrait mode
+            } else {
+              PipeGap += 8; // Wider gap in landscape mode
+            }
+          }
+
+          var MinPipeHeight = 5;
+          var MaxTopPipeHeight = 100 - PipeGap - 2 * MinPipeHeight;
+          var TopPipeHeight = Math.random() * MaxTopPipeHeight + MinPipeHeight;
+          var BottomPipeTop = TopPipeHeight + PipeGap;
+          var BottomPipeHeight = 100 - BottomPipeTop;
+          var topPipe = $("<div/>")
+            .addClass("Pipe TopPipe")
+            .css("height", TopPipeHeight + "%")
+            .data("scored", false)
+            .appendTo(canvasObject);
+          $("<div/>").addClass("PipeHead").appendTo(topPipe);
+          var bottomPipe = $("<div/>")
+            .addClass("Pipe BottomPipe")
+            .css({ height: BottomPipeHeight + "%", top: BottomPipeTop + "%" })
+            .data("scored", false)
+            .appendTo(canvasObject);
+          $("<div/>").addClass("PipeHead").appendTo(bottomPipe);
+        }
+
+        function cleanPipes() {
+          $(".Pipe").each(function () {
+            if ($(this).offset().left / $(this).parent().width() < -0.2) {
+              $(this).remove();
+            }
+          });
+        }
+
+        function checkCollisions() {
+          var hitDetected = false;
+          $(".Pipe").each(function () {
+            if (isIntersecting(Birdy.BirdyObject, $(this))) {
+              hitDetected = true;
+              playSound("hit");
+              endGame();
+              return false;
+            }
+          });
+          if (!hitDetected && isIntersecting(Birdy.BirdyObject, $("#Ground"))) {
+            playSound("hit");
+            endGame();
+          }
+        }
+
+        function isIntersecting(obj1, obj2) {
+          var obj1Dimensions = [
+            obj1.offset().left,
+            obj1.offset().top,
+            obj1.offset().left + obj1.width(),
+            obj1.offset().top + obj1.height() * 0.8,
+          ];
+          var obj2Dimensions = [
+            obj2.offset().left,
+            obj2.offset().top,
+            obj2.offset().left + obj2.width(),
+            obj2.offset().top + obj2.height(),
+          ];
+          return !(
+            obj1Dimensions[3] < obj2Dimensions[1] ||
+            obj1Dimensions[1] > obj2Dimensions[3] ||
+            obj1Dimensions[0] > obj2Dimensions[2] ||
+            obj1Dimensions[2] < obj2Dimensions[0]
+          );
+        }
+
+        function isInBound(birdy, canvas) {
+          if (
+            birdy.offset().top + birdy.height() >
+              canvas.offset().top + canvas.height() * 0.85 ||
+            birdy.offset().top < canvas.offset().top
+          ) {
+            playSound("hit");
+            endGame();
+          }
+        }
+
+        function incrementScore() {
+          $(".BottomPipe").each(function () {
+            var BirdyBeakXPos =
+              Birdy.BirdyObject.offset().left + Birdy.BirdyObject.width();
+            var PipeRightXPos = $(this).offset().left + $(this).width();
+            if (!$(this).data("scored") && BirdyBeakXPos > PipeRightXPos) {
+              CurrentScore++;
+              $(this).data("scored", true);
+              playSound("point");
+              $("#CurrentScore").css({
+                transform: "scale(1.3)",
+                transition: "transform 0.2s",
+              });
+              setTimeout(function () {
+                $("#CurrentScore").css({
+                  transform: "scale(1)",
+                  transition: "transform 0.2s",
+                });
+              }, 200);
+            }
+          });
+          $("#CurrentScore").html(CurrentScore);
+        }
+
+        // Improved sound function that actually plays sounds
+        function playSound(type) {
+          if (!sounds[type]) return;
+
+          // Create a clone of the audio to allow overlapping sounds
+          var sound = sounds[type].cloneNode();
+
+          // Play the sound
+          var playPromise = sound.play();
+
+          // Handle potential play() promise rejection due to autoplay policies
+          if (playPromise !== undefined) {
+            playPromise.catch(function (error) {
+              console.log("Audio play failed:", error);
+            });
+          }
+
+          // Clean up the clone after playing to avoid memory leaks
+          sound.onended = function () {
+            sound = null;
+          };
+        }
+
+        // Add easing functions for smoother animations
+        $.easing.easeInQuad = function (x, t, b, c, d) {
+          return c * (t /= d) * t + b;
+        };
+        $.easing.easeOutQuad = function (x, t, b, c, d) {
+          return -c * (t /= d) * (t - 2) + b;
+        };
+
+        startGame();
+
+        function setCookie(cname, cvalue, exdays) {
+          var d = new Date();
+          d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
+          var expires = "expires=" + d.toGMTString();
+          document.cookie = cname + "=" + cvalue + "; " + expires;
+        }
+
+        function getCookie(cname) {
+          var name = cname + "=";
+          var ca = document.cookie.split(";");
+          for (var i = 0; i < ca.length; i++) {
+            var c = ca[i].trim();
+            if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+          }
+          return "";
+        }
+
+        // Mobile Responsive Adjustments with improved pipe speeds
+        $(function () {
+          function handleResponsiveLayout() {
+            var windowWidth = $(window).width();
+            var windowHeight = $(window).height();
+            var isPortrait = windowHeight > windowWidth;
+            var isMobile = windowWidth < 768;
+
+            // Increase bird size on mobile
+            var birdScaleFactor = isMobile ? (isPortrait ? 3 : 2.5) : 1;
+
+            // Increase pipe width on mobile
+            var pipeAnimationDuration = isMobile
+              ? isPortrait
+                ? "13s"
+                : "14s"
+              : "12s";
+            var pipeScaleFactor = isMobile ? (isPortrait ? 2 : 2) : 1;
+            var buttonScaleFactor = isMobile ? 1.4 : 1;
+            var textScaleFactor = isMobile
+              ? windowWidth < 480
+                ? 0.7
+                : 0.85
+              : 1;
+
+            $("#Birdy").css({
+              width: 2.9 * birdScaleFactor + "%",
+              "padding-bottom": 2 * birdScaleFactor + "%",
+            });
+
+            // Adjust pipe animation speeds based on device
+            var pipeAnimationDuration = isMobile
+              ? isPortrait
+                ? "15s"
+                : "14s"
+              : "12s";
+            $(".Pipe").css({
+              width: 5 * pipeScaleFactor + "%",
+              "animation-duration": pipeAnimationDuration,
+            });
+
+            // Also update ground animation to match pipe speed
+            $("#Ground").css({
+              height: isMobile && isPortrait ? "20%" : "15%",
+              "animation-duration": pipeAnimationDuration,
+            });
+
+            $(".PipeHead").css({
+              width: "120%",
+              height: (isMobile ? 20 : 26) + "px",
+              left: "-10%",
+            });
+
+            $("#PauseButton, #DayNightToggle").css({
+              width: 40 * buttonScaleFactor + "px",
+              height: 40 * buttonScaleFactor + "px",
+            });
+
+            $("#PauseButton").css({
+              top: isMobile ? "3%" : "2%",
+              right: isMobile ? "3%" : "1%",
+            });
+
+            $("#DayNightToggle").css({
+              top: isMobile ? "3%" : "2%",
+              left: isMobile ? "3%" : "1%",
+            });
+
+            $("#CurrentScoreCard").css({
+              "font-size": 48 * textScaleFactor + "px",
+              top: isMobile && isPortrait ? "5%" : "10%",
+            });
+
+            $("#LostScoreScreen").css({
+              padding: isMobile ? "15px" : "20px",
+              "font-size": 16 * textScaleFactor + "px",
+              width: isMobile ? (isPortrait ? "75%" : "50%") : "auto",
+            });
+
+            $(".Cloud").each(function () {
+              var currentSize =
+                (parseFloat($(this).css("width")) / $(window).width()) * 100;
+              var newSize = isMobile ? currentSize * 1.5 : currentSize;
+              $(this).css({ width: newSize + "%", height: newSize / 2 + "%" });
+            });
+          }
+
+          // Adapt to screen size changes
+          $(window).on("resize orientationchange", handleResponsiveLayout);
+          handleResponsiveLayout();
+
+          // Low-end device optimizations
+          var mobilePerformanceAdjust = function () {
+            var isMobile = $(window).width() < 768;
+            var isLowEndDevice =
+              window.devicePixelRatio <= 1 ||
+              /Android [1-4]/.test(navigator.userAgent);
+
+            if (isMobile && isLowEndDevice) {
+              // Remove some clouds to improve performance
+              $(".Cloud").slice(3).remove();
+
+              // Reduce audio quality for performance
+              Object.keys(sounds).forEach(function (key) {
+                sounds[key].volume = 0.4;
+              });
+            }
+          };
+
+          mobilePerformanceAdjust();
+        });
+      });
+    </script>
+  </body>
+</html>
